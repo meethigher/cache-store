@@ -1,4 +1,7 @@
-modify from [halo](https://github.com/halo-dev/halo)
+参考
+
+1. [lishuo9527/LocalCache: JAVA LocalCache -- JAVA 本地缓存工具类](https://github.com/lishuo9527/LocalCache)
+2. [halo-dev/halo: ✍ 一款现代化的开源博客 / CMS 系统。](https://github.com/halo-dev/halo)
 
 
 ```java
