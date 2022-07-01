@@ -170,7 +170,7 @@ public class LruInMemoryCacheStore<K, V> extends AbstractCacheStore<K, V> {
 
         @Override
         protected boolean removeEldestEntry(Map.Entry<K, CacheWrapper<V>> eldest) {
-            log.info("插入数据{}", eldest.getKey());
+            log.info("队列中最不常用的数据key {}", eldest.getKey());
             return this.size() > maxCapacity;
         }
     }
