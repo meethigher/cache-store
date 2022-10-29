@@ -57,7 +57,6 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
         if (lruMap.containsKey(key)) {
             return false;
         } else {
-            System.out.println(key+"不存在，放入");
             lruMap.put(key, model);
             return true;
         }
