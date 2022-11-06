@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import top.meethigher.cache.CacheStore;
 
 import java.lang.management.ManagementFactory;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 class DefaultCacheStoreTest {
@@ -26,5 +28,62 @@ class DefaultCacheStoreTest {
             System.out.printf("%s,%s,%s\n", runtime.availableProcessors(), runtime.totalMemory(), runtime.maxMemory());
             Thread.sleep(1000L);
         }
+    }
+
+    @Test
+    void concurrent() throws Exception {
+        CacheStore<Integer, Integer> cache = new DefaultCacheStore<>();
+        CountDownLatch countDownLatch = new CountDownLatch(4);
+        new Thread(() -> {
+            System.out.println(Thread.currentThread().getId());
+            try {
+                for (int i = 0; i < 100; i++) {
+                    cache.put(i, i, 1, TimeUnit.SECONDS);
+                    Thread.sleep(100);
+                }
+                countDownLatch.countDown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+        new Thread(() -> {
+            System.out.println(Thread.currentThread().getId());
+            try {
+                for (int i = 0; i < 100; i++) {
+                    cache.put(i, i);
+                    Thread.sleep(200);
+                }
+                countDownLatch.countDown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+        new Thread(() -> {
+            System.out.println(Thread.currentThread().getId());
+            try {
+                for (int i = 0; i < 100; i++) {
+                    cache.remove(i);
+                    Thread.sleep(1000);
+                }
+                countDownLatch.countDown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+        new Thread(() -> {
+            System.out.println(Thread.currentThread().getId());
+            try {
+                for (int i = 0; i < 100; i++) {
+                    Map<Integer, Integer> integerIntegerMap = cache.toMap();
+                    System.out.println(integerIntegerMap.size());
+                    Thread.sleep(500);
+                }
+                countDownLatch.countDown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        countDownLatch.await();
     }
 }

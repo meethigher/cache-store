@@ -26,7 +26,7 @@ public class DefaultCacheStore<KEY, VALUE> extends AbstractCacheStore<KEY, VALUE
     @Override
     public VALUE remove(KEY key) {
         AbstractCacheStore<KEY, VALUE>.CacheModel<VALUE> model = cacheMap.remove(key);
-        return model.getData();
+        return model == null ? null : model.getData();
     }
 
     @Override
@@ -35,7 +35,7 @@ public class DefaultCacheStore<KEY, VALUE> extends AbstractCacheStore<KEY, VALUE
     }
 
     @Override
-    public Map<KEY, VALUE> toMap() {
+    public synchronized Map<KEY, VALUE> toMap() {
         Map<KEY, VALUE> map = new LinkedHashMap<>();
         for (KEY key : cacheMap.keySet()) {
             VALUE value = get(key);

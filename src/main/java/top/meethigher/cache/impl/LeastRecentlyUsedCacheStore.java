@@ -16,18 +16,29 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
 
     public LeastRecentlyUsedCacheStore() {
         //map的长度是2的幂
-        this(1 << 30);
+        this(1 << 30, false);
 
     }
 
     public LeastRecentlyUsedCacheStore(int maxCapacity) {
-        lruMap = new LRUMap(maxCapacity);
+        this(maxCapacity, false);
+    }
+
+    /**
+     * LRU缓存
+     *
+     * @param maxCapacity 最大容量
+     * @param accessOrder true表示访问顺序，false表示插入顺序
+     */
+    public LeastRecentlyUsedCacheStore(int maxCapacity, boolean accessOrder) {
+        lruMap = new LRUMap(maxCapacity, accessOrder);
+        getCleaner().scheduleAtFixedRate(new LRUCacheStoreCleaner(this), 0, getPERIOD());
     }
 
     @Override
     public synchronized VALUE remove(KEY key) {
         AbstractCacheStore<KEY, VALUE>.CacheModel<VALUE> model = lruMap.remove(key);
-        return model.getData();
+        return model == null ? null : model.getData();
     }
 
     @Override
@@ -37,8 +48,8 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
 
     @Override
     public synchronized Map<KEY, VALUE> toMap() {
-        Map<KEY, VALUE> map = new HashMap<>();
-        for (KEY key : new HashSet<>(lruMap.keySet())) {
+        Map<KEY, VALUE> map = new LinkedHashMap<>();
+        for (KEY key : new ArrayList<>(lruMap.keySet())) {
             VALUE value = get(key);
             if (value != null) {
                 map.put(key, value);
@@ -63,7 +74,7 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
     }
 
     @Override
-    protected CacheModel<VALUE> enhancedGet(KEY key) {
+    protected synchronized CacheModel<VALUE> enhancedGet(KEY key) {
         return lruMap.get(key);
     }
 
@@ -80,7 +91,9 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
         private final int maxCapacity;
 
 
-        private LRUMap(int maxCapacity) {
+        private LRUMap(int maxCapacity, boolean accessOrder) {
+            //负载因子1，初始容量maxCapacity，表示实际容量超过maxCapacity*1后进行扩容
+            super(maxCapacity, 1f, accessOrder);
             this.maxCapacity = maxCapacity;
         }
 
@@ -97,11 +110,21 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
      * @since 2022/10/27 16:13
      */
     private class LRUCacheStoreCleaner extends TimerTask {
+
+        private final LeastRecentlyUsedCacheStore<KEY, VALUE> cacheStore;
+
+        private LRUCacheStoreCleaner(LeastRecentlyUsedCacheStore<KEY, VALUE> cacheStore) {
+            this.cacheStore = cacheStore;
+        }
+
         @Override
         public void run() {
-            Set<KEY> keySet = new HashSet<>(lruMap.keySet());
-            for (KEY key : keySet) {
-                get(key);
+            synchronized (cacheStore) {
+                try {
+                    new ArrayList<>(lruMap.keySet()).forEach(LeastRecentlyUsedCacheStore.this::get);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

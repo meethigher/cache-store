@@ -21,7 +21,7 @@ public abstract class AbstractCacheStore<KEY, VALUE> implements CacheStore<KEY, 
     private final Timer cleaner;
 
     //单位毫秒
-    private final long PERIOD = 1 * 1000;
+    private final long PERIOD = 60 * 1000;
 
     public AbstractCacheStore() {
         this.cleaner = new Timer("cleaner@" + Integer.toHexString(hashCode()));
