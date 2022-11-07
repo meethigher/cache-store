@@ -8,11 +8,12 @@
 <dependency>
     <groupId>top.meethigher</groupId>
     <artifactId>cache-store</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 
-或者下载标签为1.0的进行打包即可
+或者下载标签为1.1的进行打包即可
+
 
 ```sh
 mvn clean install
