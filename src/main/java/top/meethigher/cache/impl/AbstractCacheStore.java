@@ -5,6 +5,8 @@ import top.meethigher.cache.CacheStore;
 import java.io.Serializable;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * 封装共性的缓存实现规范
@@ -60,13 +62,25 @@ public abstract class AbstractCacheStore<KEY, VALUE> implements CacheStore<KEY, 
      */
     protected abstract CacheModel<VALUE> enhancedGet(KEY key);
 
-
-    @Override
-    public VALUE get(KEY key) {
-        checkNull(key, "参数 'key' 不可为空");
+    /**
+     * 通用消费方法
+     *
+     * @param key      键
+     * @param function function接口
+     * @param consumer consumer接口
+     * @return 值
+     */
+    private VALUE getConsumer(KEY key, Function<KEY, VALUE> function, Consumer<VALUE> consumer) {
         CacheModel<VALUE> model = enhancedGet(key);
         if (model == null) {
-            return null;
+            VALUE value = null;
+            if (function != null && consumer != null) {
+                value = function.apply(key);
+                if (value != null) {
+                    consumer.accept(value);
+                }
+            }
+            return value;
         }
         Long expireTime = model.getExpireTime();
         //判断时间是否已经过期，过期即移除掉
@@ -76,6 +90,31 @@ public abstract class AbstractCacheStore<KEY, VALUE> implements CacheStore<KEY, 
             return null;
         }
         return model.getData();
+    }
+
+    @Override
+    public VALUE get(KEY key) {
+        checkNull(key, "参数 'key' 不可为空");
+        return getConsumer(key, null, null);
+    }
+
+    @Override
+    public VALUE demand(KEY key, Function<KEY, VALUE> function) {
+        checkNull(key, "参数 'key' 不可为空");
+        checkNull(function, "参数 'function' 不可为空");
+        return getConsumer(key, function, value -> put(key, value));
+    }
+
+
+    @Override
+    public VALUE demand(KEY key, Function<KEY, VALUE> function, long timeout, TimeUnit timeUnit) {
+        checkNull(key, "参数 'key' 不可为空");
+        checkNull(function, "参数 'function' 不可为空");
+        checkNull(timeUnit, "参数 'timeUnit' 不可为空");
+        if (timeout <= 0) {
+            throw new IllegalArgumentException("参数 'timeout' 必须为大于0的数");
+        }
+        return getConsumer(key, function, value -> put(key, value, timeout, timeUnit));
     }
 
     @Override
@@ -114,6 +153,24 @@ public abstract class AbstractCacheStore<KEY, VALUE> implements CacheStore<KEY, 
         return enhancedSet(key, buildCacheModel(value, timeout, timeUnit));
     }
 
+    @Override
+    public void supply(KEY key, VALUE value) {
+        checkNull(key, "参数 'key' 不可为空");
+        checkNull(value, "参数 'value' 不可为空");
+        CacheModel<VALUE> cacheModel = enhancedGet(key);
+        if (cacheModel == null || cacheModel.getData() == null) {
+            put(key, value);
+        } else {
+            cacheModel.setData(value);
+            enhancedPut(key, cacheModel);
+        }
+    }
+
+    @Override
+    public boolean contains(KEY key) {
+        VALUE value = get(key);
+        return value != null;
+    }
 
     /**
      * 校验，Null时丢出异常

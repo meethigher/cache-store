@@ -16,7 +16,7 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
 
     public LeastRecentlyUsedCacheStore() {
         //map的长度是2的幂
-        this(1 << 30, false);
+        this(1 << 4, false);
 
     }
 
@@ -59,6 +59,11 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
     }
 
     @Override
+    public synchronized int size() {
+        return lruMap.size();
+    }
+
+    @Override
     protected synchronized void enhancedPut(KEY key, CacheModel<VALUE> model) {
         lruMap.put(key, model);
     }
@@ -77,7 +82,6 @@ public class LeastRecentlyUsedCacheStore<KEY, VALUE> extends AbstractCacheStore<
     protected synchronized CacheModel<VALUE> enhancedGet(KEY key) {
         return lruMap.get(key);
     }
-
 
     /**
      * 基于LRU策略的Map

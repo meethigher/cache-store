@@ -86,4 +86,15 @@ class DefaultCacheStoreTest {
 
         countDownLatch.await();
     }
+
+    @Test
+    void testSupply() throws Exception {
+        DefaultCacheStore<String, String> cacheStore = new DefaultCacheStore<>();
+        cacheStore.put("1","1",10,TimeUnit.SECONDS);
+        cacheStore.supply("1","2");
+        while(true) {
+            System.out.println(cacheStore.get("1"));
+            Thread.sleep(1000);
+        }
+    }
 }

@@ -68,12 +68,12 @@ class LeastRecentlyUsedCacheStoreTest {
 
     @Test
     void order() throws Exception {
-        LeastRecentlyUsedCacheStore<Integer, Integer> cacheStore = new LeastRecentlyUsedCacheStore<>(2,true);
-        cacheStore.put(1,1);
-        cacheStore.put(2,2);
+        LeastRecentlyUsedCacheStore<Integer, Integer> cacheStore = new LeastRecentlyUsedCacheStore<>(2, true);
+        cacheStore.put(1, 1);
+        cacheStore.put(2, 2);
         System.out.println(cacheStore.toMap());
-        cacheStore.put(1,1,1,TimeUnit.SECONDS);
-        cacheStore.put(3,3);
+        cacheStore.put(1, 1, 1, TimeUnit.SECONDS);
+        cacheStore.put(3, 3);
         System.out.println(cacheStore.toMap());
         Thread.sleep(1000);
         System.out.println(cacheStore.toMap());
@@ -83,7 +83,7 @@ class LeastRecentlyUsedCacheStoreTest {
     public static void main(String[] args) {
         LeastRecentlyUsedCacheStore<Integer, Integer> cacheStore = new LeastRecentlyUsedCacheStore<>(4);
         for (int i = 0; i < 10; i++) {
-            cacheStore.put(i,i);
+            cacheStore.put(i, i);
         }
         //用于测试并发是否存在问题。线程断点参考[IDEA调试技巧](https://meethigher.top/blog/2022/idea-debug/)
         new Thread(new Runnable() {
@@ -91,7 +91,20 @@ class LeastRecentlyUsedCacheStoreTest {
             public void run() {
                 cacheStore.remove(1);
             }
-        },"测试线程").start();
+        }, "测试线程").start();
         cacheStore.toMap();
+    }
+
+
+    @Test
+    void testSupply() throws Exception {
+        CacheStore<String, String> cacheStore = new LeastRecentlyUsedCacheStore<>();
+        cacheStore.put("1", "1", 10, TimeUnit.SECONDS);
+        cacheStore.supply("1", "2");
+        System.out.println(1<<4);
+        while (true) {
+            System.out.println(cacheStore.get("1"));
+            Thread.sleep(1000);
+        }
     }
 }

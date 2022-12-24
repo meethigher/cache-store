@@ -2,13 +2,12 @@ package top.meethigher.cache.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * 常规缓存服务
+ * 自动扩容缓存服务
  *
  * @author chenchuancheng
  * @since 2022/10/27 15:57
@@ -47,6 +46,11 @@ public class DefaultCacheStore<KEY, VALUE> extends AbstractCacheStore<KEY, VALUE
     }
 
     @Override
+    public int size() {
+        return cacheMap.size();
+    }
+
+    @Override
     protected void enhancedPut(KEY key, CacheModel<VALUE> model) {
         cacheMap.put(key, model);
     }
@@ -65,6 +69,7 @@ public class DefaultCacheStore<KEY, VALUE> extends AbstractCacheStore<KEY, VALUE
     protected CacheModel<VALUE> enhancedGet(KEY key) {
         return cacheMap.get(key);
     }
+
 
     /**
      * 缓存清理器

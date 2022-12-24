@@ -6,7 +6,7 @@
 
     <groupId>top.meethigher</groupId>
     <artifactId>cache-store</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
     <name>cache-store</name>
     <description>轻量缓存服务，支持过期清理、LRU策略</description>
     <url>https://github.com/meethigher/cache-store</url>
